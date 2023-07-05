@@ -1,0 +1,7 @@
+{
+  "name": "bar-scanner-txt",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
