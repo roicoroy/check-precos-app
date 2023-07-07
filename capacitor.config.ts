@@ -1,7 +1,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'io.ionic.starter',
+  appId: 'check.precos.br',
   appName: 'bar-scanner-txt',
   webDir: 'www',
   server: {

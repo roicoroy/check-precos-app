@@ -1,0 +1,8 @@
+{
+	"appId": "check.precos.br",
+	"appName": "bar-scanner-txt",
+	"webDir": "www",
+	"server": {
+		"androidScheme": "https"
+	}
+}
