@@ -1,5 +1,5 @@
 {
-  "name": "bar-scanner-txt",
+  "name": "check-precos",
   "integrations": {
     "capacitor": {}
   },

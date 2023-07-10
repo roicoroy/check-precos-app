@@ -1,6 +1,6 @@
 {
 	"appId": "check.precos.br",
-	"appName": "bar-scanner-txt",
+	"appName": "Check precos",
 	"webDir": "www",
 	"server": {
 		"androidScheme": "https"

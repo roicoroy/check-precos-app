@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Check precos</string>
+    <string name="title_activity_main">Check precos</string>
+    <string name="package_name">check.precos.br</string>
+    <string name="custom_url_scheme">check.precos.br</string>
+</resources>
