@@ -1,12 +1,17 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { Barcode, BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
-import { AlertController, IonSearchbar, IonicModule, LoadingController } from '@ionic/angular';
+import { Component, OnInit } from '@angular/core';
+import { IonicModule, LoadingController } from '@ionic/angular';
 import { PrecosService } from '../precos.service';
-import { Subject, debounceTime, takeUntil } from 'rxjs';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FilterPipe } from "../filter.pipe";
-const PRICE_LIST = 'priceList';
+import * as XLSX from 'xlsx';
+import { Router } from '@angular/router';
+import { FileOpener } from '@awesome-cordova-plugins/file-opener/ngx';
+import { File } from '@ionic-native/file/ngx';
+import { IProduct } from '../app.interface';
+
+const ESTOQUE = 'estoque';
+
 @Component({
   selector: 'app-home',
   templateUrl: 'home.page.html',
@@ -17,188 +22,66 @@ const PRICE_LIST = 'priceList';
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    FilterPipe
+    FilterPipe,
+  ],
+  providers: [
+    FileOpener,
+    File
   ]
 })
 export class HomePage implements OnInit {
-  @ViewChild('searchInput', { static: false }) searchInput!: IonSearchbar;
 
-  public searchControl: FormControl;
-
-  isSupported = false;
-  barcodes: Barcode[] = [];
-  productsList: any;
-  product: any;
-  filterKeys = ['EAN13'];
-
-  public searchTerm: string = "";
-
-  isLoading = false;
-
-  private readonly ngUnsubscribe = new Subject();
-
-  public items: any = [];
-  search: any;
+  products: IProduct[] = [];
+  loading: any;
+  fileDate: Date | undefined;
 
   constructor(
-    private alertController: AlertController,
+    private router: Router,
     private pricesService: PrecosService,
-    private loadingCtrl: LoadingController,
-  ) {
-    this.searchControl = new FormControl();
-  }
+    private loadingCtrl: LoadingController
+  ) { }
 
   async ngOnInit() {
-    // console.log('ddd');
-    this.startServiceFirebird();
-    // this.startServiceExcell();
-    const device = await this.pricesService.getDeviceInfo();
-    if (device.platform === 'android' || device.platform === 'ios') {
-      BarcodeScanner.isSupported().then((result) => {
-        this.isSupported = result.supported;
+    this.loading = await this.loadingCtrl.create({});
+    await this.loading.present();
+
+    this.pricesService.getKeyAsObservable(ESTOQUE)
+      .pipe()
+      .subscribe(async (file) => {
+        // this.myData = result;
+        if (file != null) {
+          ;
+          this.fileDate = file.lastModifiedDate;
+          // this.renderExcelJson(file);
+          await this.loading.dismiss();
+        }
+        else {
+          await this.loading.dismiss();
+        }
       });
+  }
+  async renderExcelJson(file: any) {
+    const f = await (file).arrayBuffer();
+    const wb = XLSX.read(f);
+    this.products = XLSX.utils.sheet_to_json<any>(wb.Sheets[wb.SheetNames[0]]);
+    if (this.loading) {
+      await this.loading.dismiss();
     }
   }
-
-  async startServiceFirebird() {
-    this.presentLoading('');
-    return this.pricesService.getKeyAsObservable(PRICE_LIST)
-      .pipe(
-        takeUntil(this.ngUnsubscribe)
-      )
-      .subscribe(async (pricesList) => {
-        console.log(':::>', pricesList);
-        if (pricesList === null) {
-          this.pricesService.getPricesFirebird()
-            .pipe(
-              takeUntil(this.ngUnsubscribe)
-            )
-            .subscribe(async (products: any) => {
-              console.log(products);
-              if (products) {
-                this.productsList = products;
-                // // console.log(this.productsList);
-                this.pricesService.storageSet(PRICE_LIST, this.productsList);
-                this.dismissLoading();
-              }
-            });
-        } else {
-          this.productsList = pricesList;
-          console.log('this.productsList', this.productsList);
-          this.dismissLoading();
-        }
-      });
-  }
-
-  // startServiceExcell() {
-  //   return this.pricesService.getKeyAsObservable(PRICE_LIST)
-  //     .pipe(
-  //       takeUntil(this.ngUnsubscribe)
-  //     )
-  //     .subscribe((pricesList) => {
-  //       // console.log(pricesList);
-  //       if (pricesList == null) {
-  //         this.pricesService.getPricesExcel()
-  //           .pipe(
-  //             takeUntil(this.ngUnsubscribe)
-  //           )
-  //           .subscribe((products: any) => {
-
-  //             this.productsList = products.Plan1;
-  //             this.pricesService.storageSet(PRICE_LIST, this.productsList);
-  //           });
-  //       } else {
-  //         this.productsList = pricesList;
-  //       }
-  //     });
-  // }
-
-  ngOnDestroy(): void {
-    this.ngUnsubscribe.next(null);
-    this.ngUnsubscribe.complete();
-  }
-
-  async clearStorage() {
-    this.searchInput.value = '';
-    this.product = '';
-    await this.pricesService.storageRemove(PRICE_LIST);
-    // this.startServiceFirebird();
-  }
-
-  async searchProduct(): Promise<void> {
-    this.product = '';
-    this.productsList.forEach((prod: any) => {
-      if (prod.EAN13 == this.searchInput.value) {
-        this.product = prod;
-        this.searchInput.value = '';
-      }
+  async onFileChange(fileChangeEvent: any) {
+    this.loading = await this.loadingCtrl.create({
     });
-  }
+    this.loading.present();
 
-  async scan(): Promise<void> {
-    const granted = await this.requestPermissions();
+    const file = fileChangeEvent.target.files[0];
 
-    this.product = '';
-    this.searchInput.value = '';
-    this.barcodes = [];
-
-    if (!granted) {
-      this.presentAlert();
-      return;
-    }
-    const { barcodes } = await BarcodeScanner.scan();
-    this.barcodes.push(...barcodes);
-
-    this.barcodes.forEach(async (barcode) => {
-      console.log(barcode);
-      this.productsList.forEach(async (prod: any) => {
-        if (prod.EAN13 === barcode.rawValue) {
-          this.product = prod;
-        } else {
-          this.produtoNaoCadastradoAlert();
-        }
-      });
+    this.pricesService.storageSet(ESTOQUE, file).then(async (file) => {
+      this.renderExcelJson(file);
+      this.loading.dismiss();
     });
-  }
 
-  async requestPermissions(): Promise<boolean> {
-    const { camera } = await BarcodeScanner.requestPermissions();
-    return camera === 'granted' || camera === 'limited';
   }
-
-  async produtoNaoCadastradoAlert(): Promise<void> {
-    const alert = await this.alertController.create({
-      message: 'produto nao cadastrado',
-      buttons: ['OK'],
-    });
-    await alert.present();
-  }
-
-  async presentAlert(): Promise<void> {
-    const alert = await this.alertController.create({
-      header: 'Permission denied',
-      message: 'Please grant camera permission to use the barcode scanner.',
-      buttons: ['OK'],
-    });
-    await alert.present();
-  }
-  async presentLoading(content?: any) {
-    this.isLoading = true;
-    return await this.loadingCtrl.create({
-      cssClass: 'my-custom-class',
-      // message: content,
-      spinner: 'circles',
-    }).then(async (loader) => {
-      await loader.present().then(resp => {
-        if (!this.isLoading) {
-          loader.dismiss().then(() => { });
-        }
-      });
-    });
-  }
-
-  async dismissLoading() {
-    this.isLoading = false;
-    return await this.loadingCtrl.dismiss();
+  scanPage() {
+    this.router.navigateByUrl('scan');
   }
 }
