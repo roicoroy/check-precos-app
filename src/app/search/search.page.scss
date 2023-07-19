@@ -1,4 +1,8 @@
-/* Scoped components require higher specificity to customize */
+ion-content {
+    overflow: hidden;
+}
+
+
 ion-searchbar.custom {
     --background: var(--ion-color-primary);
     --color: #fff;
@@ -25,9 +29,8 @@ ion-searchbar.md.custom {
 .cdk-viewport {
     height: 200px;
     width: 100%;
-    border: 1px solid black;
 }
 
 .product-item {
-    height: 50px;
+    height: 90px;
 }

@@ -7,7 +7,8 @@ import * as XLSX from 'xlsx';
 import { Router } from '@angular/router';
 import { FileOpener } from '@awesome-cordova-plugins/file-opener/ngx';
 import { File } from '@ionic-native/file/ngx';
-import { ESTOQUE, IProduct } from '../app.interface';
+import { ESTOQUE, ESTOQUE_JSON, IProduct } from '../app.interface';
+import { HomeService } from './home.service';
 
 @Component({
   selector: 'app-home',
@@ -34,12 +35,19 @@ export class HomePage implements OnInit {
   constructor(
     private router: Router,
     private pricesService: PrecosService,
+    public homeService: HomeService,
     private loadingCtrl: LoadingController
   ) { }
 
   async ngOnInit() {
     this.loading = await this.loadingCtrl.create({});
     await this.loading.present();
+
+    this.homeService.init();
+
+    // this.homeService.Products$?.subscribe((res) => {
+    //   console.log(res);
+    // });
 
     this.pricesService.getKeyAsObservable(ESTOQUE)
       .pipe()
@@ -56,27 +64,28 @@ export class HomePage implements OnInit {
         }
       });
   }
-  // async renderExcelJson(file: any) {
-  //   const f = await (file).arrayBuffer();
-  //   const wb = XLSX.read(f);
-  //   this.products = XLSX.utils.sheet_to_json<any>(wb.Sheets[wb.SheetNames[0]]);
-  //   if (this.loading) {
-  //     await this.loading.dismiss();
-  //   }
-  // }
+  async renderExcelJson(file: any) {
+    const f = await (file).arrayBuffer();
+    const wb = await XLSX.read(f);
+    this.products = await XLSX.utils.sheet_to_json<any>(wb.Sheets[wb.SheetNames[0]]);
+    if (this.loading) {
+      await this.loading.dismiss();
+    }
+    return this.products;
+
+  }
   async onFileChange(fileChangeEvent: any) {
     this.loading = await this.loadingCtrl.create({
     });
     this.loading.present();
 
     const file = fileChangeEvent.target.files[0];
+    const json = await this.renderExcelJson(file);
 
-    this.pricesService.storageSet(ESTOQUE, file).then(async (file) => {
-      // this.renderExcelJson(file);
-      this.loading.dismiss();
-      this.localFile = file;
-    });
-
+    await this.pricesService.storageSet(ESTOQUE, file)
+    await this.pricesService.storageSet(ESTOQUE_JSON, json)
+    this.localFile = file;
+    await this.loading.dismiss();
   }
   scanPage() {
     this.router.navigateByUrl('scan');

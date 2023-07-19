@@ -233,6 +233,7 @@ export class ScanPage implements OnInit {
     this.isLoading = false;
     return await this.loadingCtrl.dismiss();
   }
+  
   back() {
     this.router.navigateByUrl('home');
   }

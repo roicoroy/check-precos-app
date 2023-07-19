@@ -1,76 +1,67 @@
 <ion-header [translucent]="false">
   <ion-toolbar>
-    <ion-title>search</ion-title>
-    <!-- <ion-searchbar class="custom" [formControl]="searchControl"></ion-searchbar> -->
+    <ion-buttons slot="start">
+      <ion-button (click)="back()">
+        <ion-icon color="primary" name="arrow-back"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>
+      Search
+    </ion-title>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-searchbar class="custom" [formControl]="searchControl"></ion-searchbar>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="false">
+<ion-content [fullscreen]="false" class="ion-margin">
   <ion-header collapse="condense">
     <ion-toolbar>
-      <ion-title size="large">search</ion-title>
-      <ion-searchbar class="custom" [formControl]="searchControl"></ion-searchbar>
+      <ion-title size="large">
+        Search
+      </ion-title>
     </ion-toolbar>
   </ion-header>
 
-  <cdk-virtual-scroll-viewport appendOnly itemSize="50" class="cdk-viewport">
-    <div *cdkVirtualFor="let item of items" class="product-item">
-      <ion-label>
-        {{ item | json }}
-      </ion-label>
-    </div>
-  </cdk-virtual-scroll-viewport>
+  <ion-toolbar>
+    <!-- <input matInput [(ngModel)]='term'> -->
+    <ion-searchbar [(ngModel)]='term'></ion-searchbar>
+  </ion-toolbar>
 
-  <cdk-virtual-scroll-viewport appendOnly itemSize="50" class="cdk-viewport">
-    <div *cdkVirtualFor="let item of productsList" class="product-item">
-      <!-- {{ item | json }} -->
-      <ion-label>
-        {{ item.EAN13 }} <br />
-        {{ item.DESCRICAO }} <br />
-        {{ item.PRECO_VENDA }} <br />
-      </ion-label>
-    </div>
-  </cdk-virtual-scroll-viewport>
+  <!-- <div *ngFor="let item of products$ | async | customFilter: term">
+    <p>
+      {{item}}
+    </p>
+  </div> -->
 
-  <!-- {{ productsList | json }} -->
-  {{ products | async | json }}
-  <!-- <ion-list>
-    <ion-item *ngFor="let item of productsList">
-      <ion-label>
-        {{ item.EAN13 }} <br />
-        {{ item.DESCRICAO }} <br />
-        {{ item.PRECO_VENDA }} <br />
-      </ion-label>
-    </ion-item>
-  </ion-list> -->
+  <ion-card>
+    <cdk-virtual-scroll-viewport appendOnly itemSize="50" class="ion-padding cdk-viewport">
+      <ion-list *cdkVirtualFor="let item of products$ | async | customFilter: term" class="product-item">
+        <ion-item button lines="full">
+          <ion-label>
+            {{ item?.EAN13 }} <br />
+            {{ item.DESCRICAO }} <br />
+            {{ item?.PRECO_VENDA }} <br />
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </cdk-virtual-scroll-viewport>
+  </ion-card>
 
 
-
-
-
-
-
-  <!-- <ion-searchbar [formControl]="searchControl"></ion-searchbar>
-
-  <ion-searchbar class="custom" [debounce]="1000" (ionInput)="handleInput($event)"></ion-searchbar> -->
-
-  <!-- <ion-list>
-    <ion-item *ngFor="let item of results">
-      <ion-label>
-        {{ item.CODIGO }}
-        <br />
-        {{ item.DESCRICAO }}
-      </ion-label>
-    </ion-item>
-  </ion-list> -->
-
-  <!-- <ion-list>
-    <ion-item *ngFor="let item of seachItems">
-      {{ item.CODIGO }}
-      <br /><br /><br />
-      {{ item.DESCRICAO }}
-    </ion-item>
-  </ion-list> -->
+  <!-- <ion-card>
+    <cdk-virtual-scroll-viewport appendOnly itemSize="50" class="ion-padding cdk-viewport">
+      <ion-list *cdkVirtualFor="let item of products$ | async" class="product-item">
+        <ion-item button lines="full">
+          <ion-label>
+            {{ item?.EAN13 }} <br />
+            {{ item.DESCRICAO }} <br />
+            {{ item?.PRECO_VENDA }} <br />
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </cdk-virtual-scroll-viewport>
+  </ion-card> -->
 
   <!-- 
   CODIGO: 7898350540016

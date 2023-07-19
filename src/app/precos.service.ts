@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Storage } from '@ionic/storage-angular';
-import { Observable, from } from 'rxjs';
+import { BehaviorSubject, Observable, from } from 'rxjs';
 import { BatteryInfo, Device, DeviceId, DeviceInfo, GetLanguageCodeResult } from '@capacitor/device';
+import { IProduct } from './app.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -15,6 +16,8 @@ export class PrecosService {
   firebird = '/api/v1/firebird';
 
   public items: any = [];
+
+  public Products$?: BehaviorSubject<IProduct[]>;
 
   constructor(
     private httpClient: HttpClient,

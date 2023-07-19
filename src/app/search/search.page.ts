@@ -1,107 +1,84 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { IonicModule, LoadingController, NavController } from '@ionic/angular';
-import { Observable, Subject, catchError, debounceTime, takeUntil, throwError } from 'rxjs';
+import { IonicModule } from '@ionic/angular';
+import { Observable, Subject, debounceTime, takeUntil } from 'rxjs';
 import { IProduct } from '../app.interface';
-import { DataProvider } from './data.service';
+import { SearchService } from './search.service';
 import { ScrollingModule } from '@angular/cdk/scrolling';
+import { HomeService } from '../home/home.service';
+import { Router } from '@angular/router';
+import { PipesModule } from 'src/pipes.module';
+import { SearchModule } from './search.module';
 
 @Component({
   selector: 'app-search',
   templateUrl: './search.page.html',
   styleUrls: ['./search.page.scss'],
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  changeDetection: ChangeDetectionStrategy.Default,
   imports: [
     IonicModule,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    ScrollingModule
-  ]
+    ScrollingModule,
+    PipesModule,
+  ],
 })
 export class SearchPage implements OnInit, OnDestroy {
+
+  items = ["Kyle", "Eric", "Bailey", "Deborah", "Glenn", "Jaco", "Joni", "Gigi"]
+
+  term?: string;
+
   searchTerm: string = '';
+
   searchControl: FormControl;
-  searching: boolean = false;
+
   productsList: IProduct[] = [];
-  products?: Observable<IProduct[]>;
+
+  products$?: Observable<IProduct[]>;
+
+  data$?: Observable<any>;
+
   loading: any;
-  items: any;
-  private readonly ngUnsubscribe = new Subject();
+
+  private readonly subscription = new Subject();
+
   constructor(
-    public navCtrl: NavController,
-    public dataService: DataProvider,
-    private loadingCtrl: LoadingController,
+    public searchService: SearchService,
+    public homeService: HomeService,
+    private router: Router,
   ) {
     this.searchControl = new FormControl();
   }
 
-  async ngOnInit() {
+  ngOnInit() {
+    this.searchService.init();
 
-    // this.setFilteredProducts('');
+    this.products$ = this.searchService.SearchProducts;
 
-    // this.searchControl.valueChanges
-    //   .pipe(
-    //     debounceTime(700),
-    //     catchError(err => {
-    //       const error = throwError(() => new Error(JSON.stringify(err)));
-    //       return error;
-    //     }),
-    //     takeUntil(this.ngUnsubscribe),
-    //   )
-    //   .subscribe((search: any) => {
-    //     return this.setFilteredProducts(search);
-    //   });
-
-
-    this.items = Array.from({ length: 100000 }).map((_, i) => `Item #${i}`);
-
-    // this.products = this.dataService.Products$;
-    this.dataService.Products$?.subscribe((p)=>{
-      console.log('asd', p);
-    });
-
-    // if (this.products != null) {
-    //   // this.products.subscribe((p: any) => {
-    //   //   console.log(p); 
-    //   // });
-    // }
-    // console.log(this.items);
-
- 
+    this.searchControl.valueChanges
+      .pipe(
+        debounceTime(1000),
+        takeUntil(this.subscription),
+      )
+      .subscribe((search: string) => {
+        this.setFilteredProducts(search);
+      });
   }
+
   ngOnDestroy(): void {
-    this.ngUnsubscribe.next(null);
-    this.ngUnsubscribe.complete();
+    this.subscription.next(null);
+    this.subscription.complete();
   }
 
   async setFilteredProducts(searchTerm: string) {
-    console.log(searchTerm);
-
-    const loading = await this.loadingCtrl.create({});
-    await loading.present();
-
-    this.productsList = await this.dataService.filterProducts(searchTerm);
-    // const productsList: any = await this.dataService.filterProducts(searchTerm);
-    // this.productsList = Array.from(productsList);
-
-    // .map((product: any, i) => {
-    //   return product;
-    // });
-    // console.log(this.productsList);
-
-    await loading.dismiss();
-
-    // try {
-    //   this.productsList = await this.dataService.filterProducts(searchTerm);
-    //   await loading.dismiss();
-    // } catch (err) {
-    //   const error = throwError(() => new Error(JSON.stringify(err)));
-    //   await loading.dismiss();
-    //   return error;
-    // }
+    this.searchService.filterProducts(searchTerm);
   }
 
+  back() {
+    this.router.navigateByUrl('home');
+  }
 }
