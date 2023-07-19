@@ -1,0 +1,84 @@
+<ion-header [translucent]="false">
+  <ion-toolbar>
+    <ion-title>search</ion-title>
+    <!-- <ion-searchbar class="custom" [formControl]="searchControl"></ion-searchbar> -->
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="false">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">search</ion-title>
+      <ion-searchbar class="custom" [formControl]="searchControl"></ion-searchbar>
+    </ion-toolbar>
+  </ion-header>
+
+  <cdk-virtual-scroll-viewport appendOnly itemSize="50" class="cdk-viewport">
+    <div *cdkVirtualFor="let item of items" class="product-item">
+      <ion-label>
+        {{ item | json }}
+      </ion-label>
+    </div>
+  </cdk-virtual-scroll-viewport>
+
+  <cdk-virtual-scroll-viewport appendOnly itemSize="50" class="cdk-viewport">
+    <div *cdkVirtualFor="let item of productsList" class="product-item">
+      <!-- {{ item | json }} -->
+      <ion-label>
+        {{ item.EAN13 }} <br />
+        {{ item.DESCRICAO }} <br />
+        {{ item.PRECO_VENDA }} <br />
+      </ion-label>
+    </div>
+  </cdk-virtual-scroll-viewport>
+
+  <!-- {{ productsList | json }} -->
+  {{ products | async | json }}
+  <!-- <ion-list>
+    <ion-item *ngFor="let item of productsList">
+      <ion-label>
+        {{ item.EAN13 }} <br />
+        {{ item.DESCRICAO }} <br />
+        {{ item.PRECO_VENDA }} <br />
+      </ion-label>
+    </ion-item>
+  </ion-list> -->
+
+
+
+
+
+
+
+  <!-- <ion-searchbar [formControl]="searchControl"></ion-searchbar>
+
+  <ion-searchbar class="custom" [debounce]="1000" (ionInput)="handleInput($event)"></ion-searchbar> -->
+
+  <!-- <ion-list>
+    <ion-item *ngFor="let item of results">
+      <ion-label>
+        {{ item.CODIGO }}
+        <br />
+        {{ item.DESCRICAO }}
+      </ion-label>
+    </ion-item>
+  </ion-list> -->
+
+  <!-- <ion-list>
+    <ion-item *ngFor="let item of seachItems">
+      {{ item.CODIGO }}
+      <br /><br /><br />
+      {{ item.DESCRICAO }}
+    </ion-item>
+  </ion-list> -->
+
+  <!-- 
+  CODIGO: 7898350540016
+  DESCRICAO: " BEBIDA LACTEA FRUTILAC MORANG"
+  EAN13: 7896862001780
+  MARCA: "MARCAS DIVERSAS"
+  PRECO_VENDA: "1,64"
+  QUANTIDADE: -14 
+-->
+
+</ion-content>

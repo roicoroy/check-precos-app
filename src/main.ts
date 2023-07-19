@@ -13,6 +13,7 @@ import { IonicStorageModule } from '@ionic/storage-angular';
 import { LOCALE_ID, DEFAULT_CURRENCY_CODE } from '@angular/core';
 import localePt from '@angular/common/locales/pt';
 import { registerLocaleData } from '@angular/common';
+import { Ng2SearchPipeModule } from 'ng2-search-filter';
 
 registerLocaleData(localePt);
 
@@ -40,6 +41,7 @@ bootstrapApplication(AppComponent, {
       IonicModule.forRoot({}),
       HttpClientModule,
       IonicStorageModule.forRoot(),
+      Ng2SearchPipeModule
     ),
     provideRouter(routes),
   ],

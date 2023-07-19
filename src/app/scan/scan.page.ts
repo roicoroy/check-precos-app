@@ -1,26 +1,38 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormControl, FormsModule } from '@angular/forms';
+import { FormBuilder, FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AlertController, IonSearchbar, IonicModule, LoadingController } from '@ionic/angular';
 import { Barcode, BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
-import { Subject, takeUntil } from 'rxjs';
+import { Observable, Subject, combineLatest, debounceTime, defer, distinctUntilChanged, from, map, merge, of, share, startWith, switchMap, takeUntil, tap } from 'rxjs';
 import { PrecosService } from '../precos.service';
-
-const PRICE_LIST = 'priceList';
-const FIREBIRD_PRICE_LIST = 'priceList';
+import { ESTOQUE, FIREBIRD_PRICE_LIST, IProduct, PRICE_LIST } from '../app.interface';
+import * as XLSX from 'xlsx';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-scan',
   templateUrl: './scan.page.html',
   styleUrls: ['./scan.page.scss'],
   standalone: true,
-  imports: [IonicModule, CommonModule, FormsModule]
+  imports: [IonicModule, CommonModule, FormsModule, ReactiveFormsModule]
 })
 export class ScanPage implements OnInit {
 
   @ViewChild('searchInput', { static: false }) searchInput!: IonSearchbar;
 
-  searchControl: FormControl;
+  searchField: FormControl;
+
+  productList$: Observable<any> | any;
+
+  products: IProduct[] = [];
+
+  public searchControl: FormControl | any;
+  public searchResults$: Observable<IProduct[]> | any;
+  public areMinimumCharactersTyped$: Observable<boolean> | any;
+  public areNoResultsFound$: Observable<boolean> | any;
+
+
+
   isSupported = false;
   barcodes: Barcode[] = [];
   productsList: [] = [];
@@ -29,7 +41,7 @@ export class ScanPage implements OnInit {
   isLoading = false;
 
   items: any = [];
-  search: any;
+  loading: any;
 
   private readonly ngUnsubscribe = new Subject();
 
@@ -37,13 +49,64 @@ export class ScanPage implements OnInit {
     private alertController: AlertController,
     private pricesService: PrecosService,
     private loadingCtrl: LoadingController,
+    private router: Router,
+    private formBuilder: FormBuilder
   ) {
-    this.searchControl = new FormControl();
+    this.searchField = new FormControl('');
   }
 
   async ngOnInit() {
-    // this.startServiceFirebird();
-    // this.startServiceExcell();
+    // this.loading = await this.loadingCtrl.create({});
+    // await this.loading.present();
+
+    this.searchControl = this.formBuilder.control("");
+
+    this.areMinimumCharactersTyped$ = this.searchControl.valueChanges.pipe(
+      map((searchString: any) => searchString.length >= 3)
+    );
+
+    const searchString$ = merge(
+      defer(() => of(this.searchControl.value)),
+      this.searchControl.valueChanges
+    ).pipe(
+      debounceTime(1000),
+      distinctUntilChanged()
+    );
+
+    this.searchResults$ = searchString$.pipe(
+      switchMap((searchString: string) =>
+        this.search(searchString)
+      ),
+      share()
+    );
+
+    this.areNoResultsFound$ = this.searchResults$.pipe(
+      map((results: any) => results.length === 0)
+    );
+
+    this.pricesService
+      .getKeyAsObservable(ESTOQUE)
+      .pipe()
+      .subscribe(async (file) => {
+        // this.myData = result;
+        if (file != null) {
+          this.renderExcelJson(file);
+          // await this.loading.dismiss();
+        }
+        // else {
+        //   await this.loading.dismiss();
+        // }
+      });
+
+
+
+    // this.produictList$ = combineLatest([foodList$, searchTerm$]).pipe(
+    //   map(([foodList, searchTerm]) => {
+
+    //   }        
+    //   )
+    // );
+
     const device = await this.pricesService.getDeviceInfo();
     if (device.platform === 'android' || device.platform === 'ios') {
       BarcodeScanner.isSupported().then((result: { supported: boolean; }) => {
@@ -52,59 +115,28 @@ export class ScanPage implements OnInit {
     }
   }
 
-  async startServiceFirebird() {
-    return this.pricesService.getKeyAsObservable(FIREBIRD_PRICE_LIST)
-      .pipe(
-        takeUntil(this.ngUnsubscribe)
-      )
-      .subscribe(async (pricesList) => {
-        if (pricesList === null) {
-          this.pricesService.getPricesFirebird()
-            .pipe(
-              takeUntil(this.ngUnsubscribe)
-            )
-            .subscribe(async (products: any) => {
-              console.log(products);
-              if (products) {
-                // this.productsList = products;
-                this.pricesService.storageSet(FIREBIRD_PRICE_LIST, products);
-              }
-            });
-        } else if (pricesList !== null) {
-          this.productsList = pricesList;
-          // console.log('this.productsList', this.productsList);
-          await this.dismissLoading();
-        }
-      });
+
+  search(searchString: string): Observable<IProduct[]> {
+    return of([
+      this.products
+    ]).pipe(
+      map((results: any) =>
+        results.filter((EAN13: string) =>
+          EAN13.toLowerCase().includes(searchString.toLowerCase())
+        )
+      ),
+      tap((results: any) => console.log("Mock API was called!", results))
+    );
   }
 
-  async startServiceExcell() {
-    await this.presentLoading();
 
-    return this.pricesService.getKeyAsObservable(PRICE_LIST)
-      .pipe(
-        takeUntil(this.ngUnsubscribe)
-      )
-      .subscribe(async (pricesList) => {
-        // console.log(pricesList);
-        if (pricesList === null) {
-          this.pricesService.getPricesExcel()
-            .pipe(
-              takeUntil(this.ngUnsubscribe)
-            )
-            .subscribe(async (products: any) => {
-              if (products.Plan1) {
-                this.productsList = products.Plan1;
-                this.pricesService.storageSet(PRICE_LIST, this.productsList);
-                await this.dismissLoading();
-              }
-            });
-        } else if (pricesList !== null) {
-          this.productsList = pricesList;
-          await this.dismissLoading();
-          // console.log('this.productsList', this.productsList);
-        }
-      });
+  async renderExcelJson(file: any) {
+    const f = await (file).arrayBuffer();
+    const wb = XLSX.read(f);
+    this.products = XLSX.utils.sheet_to_json<any>(wb.Sheets[wb.SheetNames[0]]);
+    if (this.loading) {
+      await this.loading.dismiss();
+    }
   }
 
   ngOnDestroy(): void {
@@ -115,8 +147,8 @@ export class ScanPage implements OnInit {
   async clearStorage() {
     this.searchInput.value = '';
     this.product = null;
-    this.pricesService.storageRemove(PRICE_LIST);
-    this.pricesService.storageRemove(FIREBIRD_PRICE_LIST);
+    // this.pricesService.storageRemove(PRICE_LIST);
+    // this.pricesService.storageRemove(FIREBIRD_PRICE_LIST);
   }
 
   async searchProduct(): Promise<void> {
@@ -201,6 +233,7 @@ export class ScanPage implements OnInit {
     this.isLoading = false;
     return await this.loadingCtrl.dismiss();
   }
-  
-
+  back() {
+    this.router.navigateByUrl('home');
+  }
 }

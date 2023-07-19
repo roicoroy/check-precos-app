@@ -1,14 +1,18 @@
-<ion-header [translucent]="true">
-
+<ion-header [translucent]="false">
   <ion-toolbar color="success">
+    <ion-buttons slot="start">
+      <ion-button (click)="back()">
+        <ion-icon color="primary" name="arrow-back"></ion-icon>
+      </ion-button>
+    </ion-buttons>
     <ion-title>
       Check Price
     </ion-title>
-    <ion-buttons slot="end">
+    <!-- <ion-buttons slot="end">
       <ion-button (click)="clearStorage()">
         Load Data
       </ion-button>
-    </ion-buttons>
+    </ion-buttons> -->
   </ion-toolbar>
 </ion-header>
 
@@ -19,12 +23,24 @@
     </ion-toolbar>
   </ion-header>
 
-  <ion-toolbar>
+  <!-- <ion-toolbar>
     <ion-searchbar type="tel" #searchInput showCancelButton="focus" [debounce]="1000"></ion-searchbar>
     <ion-button (click)="searchProduct()" expand="block" fill="outline" shape="round">
       Search Manually
     </ion-button>
-  </ion-toolbar>
+  </ion-toolbar> -->
+
+  <ion-searchbar [formControl]="searchField" debounce="100"></ion-searchbar>
+
+  <ion-list lines="none">
+
+    <!-- {{ productList$ | async | json }} -->
+    
+    <ion-item *ngFor="let foodItem of productList$ | async">
+      <ion-label>{{ foodItem | json }}</ion-label>
+    </ion-item>
+  </ion-list>
+
 
   <ion-list>
     <ion-item *ngFor="let barcode of barcodes">
@@ -49,9 +65,9 @@
     {{ product | json }}
     Softmaster Product from Firebird server
     <ion-item>
-      code: {{ product.EAN13 }} <br />
-      product: {{ product.DESCRICAO }} <br />
-      preco: {{ product.PRECO_VENDA }}
+      code: {{ product?.EAN13 }} <br />
+      product: {{ product?.DESCRICAO }} <br />
+      preco: {{ product?.PRECO_VENDA }}
     </ion-item>
   </ion-list>
 

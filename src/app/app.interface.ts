@@ -1,3 +1,8 @@
+
+export const ESTOQUE = 'estoque';
+export const PRICE_LIST = 'priceList';
+export const FIREBIRD_PRICE_LIST = 'priceList';
+
 export interface IProduct {
   CODIGO: string;
   EAN13: string;

@@ -3,9 +3,12 @@
     <ion-title>
       Home
     </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="clearStorage()">
+        Clear Data
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
-
-
 </ion-header>
 
 <ion-content [fullscreen]="true" class="ion-padding ion-margin">
@@ -21,24 +24,32 @@
   <ion-list>
     <ion-item>
       <ion-text color="dark">
-        date saved: {{ fileDate | date }}
+        date saved: {{ localFile?.lastModifiedDate | date }}
+      </ion-text>
+    </ion-item>
+    <ion-item>
+      <ion-text color="dark">
+        file nname: {{ localFile?.name }}
       </ion-text>
     </ion-item>
     <ion-item>
       <div>
-        has File <ion-text CLASS="ball" color="success"></ion-text>
+        Valid File <ion-text CLASS="ball" color="success"></ion-text>
       </div>
     </ion-item>
   </ion-list>
-  <ion-list>
-    <ion-item>
-      <ion-button expand="block" fill="outline" shape="round">
-        <input (change)="onFileChange($event)" type="file" id="file-upload" />
-        <label for="file-upload">Upload a file</label>
-      </ion-button>
-    </ion-item>
-  </ion-list>
 
+
+  <ion-grid>
+    <ion-row>
+      <ion-col>
+        <ion-button expand="block" fill="outline" shape="round">
+          <input (change)="onFileChange($event)" type="file" id="file-upload" />
+          <label for="file-upload">Upload new stock file</label>
+        </ion-button>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
   <!-- <table>
     <tr style="border: 1px solid black;">
       <th style="border: 1px solid black;">CODIGO</th>
@@ -54,7 +65,7 @@
     </tr>
   </table> -->
 
-  <ion-row>
+  <!-- <ion-row>
     <ion-col>
       <ion-item *ngFor="let item of products" style="border:solid 1px black">
         Codigo:- {{ item.CODIGO }} <br />
@@ -63,9 +74,11 @@
         Preco:- {{ item.PRECO_VENDA }} <br />
       </ion-item>
     </ion-col>
-  </ion-row>
+  </ion-row> -->
 
 </ion-content>
+
+
 <ion-footer>
   <ion-toolbar>
     <ion-button color="primary" expand="block" fill="outline" shape="round" (click)="scanPage()">

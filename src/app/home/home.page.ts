@@ -3,14 +3,11 @@ import { Component, OnInit } from '@angular/core';
 import { IonicModule, LoadingController } from '@ionic/angular';
 import { PrecosService } from '../precos.service';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { FilterPipe } from "../filter.pipe";
 import * as XLSX from 'xlsx';
 import { Router } from '@angular/router';
 import { FileOpener } from '@awesome-cordova-plugins/file-opener/ngx';
 import { File } from '@ionic-native/file/ngx';
-import { IProduct } from '../app.interface';
-
-const ESTOQUE = 'estoque';
+import { ESTOQUE, IProduct } from '../app.interface';
 
 @Component({
   selector: 'app-home',
@@ -22,7 +19,6 @@ const ESTOQUE = 'estoque';
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    FilterPipe,
   ],
   providers: [
     FileOpener,
@@ -33,7 +29,7 @@ export class HomePage implements OnInit {
 
   products: IProduct[] = [];
   loading: any;
-  fileDate: Date | undefined;
+  localFile: any;
 
   constructor(
     private router: Router,
@@ -50,9 +46,9 @@ export class HomePage implements OnInit {
       .subscribe(async (file) => {
         // this.myData = result;
         if (file != null) {
-          ;
-          this.fileDate = file.lastModifiedDate;
+          this.localFile = file;
           // this.renderExcelJson(file);
+          // console.log(this.localFile);
           await this.loading.dismiss();
         }
         else {
@@ -60,14 +56,14 @@ export class HomePage implements OnInit {
         }
       });
   }
-  async renderExcelJson(file: any) {
-    const f = await (file).arrayBuffer();
-    const wb = XLSX.read(f);
-    this.products = XLSX.utils.sheet_to_json<any>(wb.Sheets[wb.SheetNames[0]]);
-    if (this.loading) {
-      await this.loading.dismiss();
-    }
-  }
+  // async renderExcelJson(file: any) {
+  //   const f = await (file).arrayBuffer();
+  //   const wb = XLSX.read(f);
+  //   this.products = XLSX.utils.sheet_to_json<any>(wb.Sheets[wb.SheetNames[0]]);
+  //   if (this.loading) {
+  //     await this.loading.dismiss();
+  //   }
+  // }
   async onFileChange(fileChangeEvent: any) {
     this.loading = await this.loadingCtrl.create({
     });
@@ -76,12 +72,17 @@ export class HomePage implements OnInit {
     const file = fileChangeEvent.target.files[0];
 
     this.pricesService.storageSet(ESTOQUE, file).then(async (file) => {
-      this.renderExcelJson(file);
+      // this.renderExcelJson(file);
       this.loading.dismiss();
+      this.localFile = file;
     });
 
   }
   scanPage() {
     this.router.navigateByUrl('scan');
+  }
+  async clearStorage() {
+    this.pricesService.storageRemove(ESTOQUE);
+    this.localFile = null;
   }
 }

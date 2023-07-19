@@ -3,7 +3,7 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'home',
+    redirectTo: 'search',
     pathMatch: 'full',
   },
   {
@@ -13,5 +13,9 @@ export const routes: Routes = [
   {
     path: 'scan',
     loadComponent: () => import('./scan/scan.page').then(m => m.ScanPage)
+  },
+  {
+    path: 'search',
+    loadComponent: () => import('./search/search.page').then( m => m.SearchPage)
   },
 ];
